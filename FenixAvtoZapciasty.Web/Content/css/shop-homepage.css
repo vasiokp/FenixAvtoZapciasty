@@ -4,12 +4,28 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-shop-homepage/blob/master/LICENSE)
  */
 
-body {
-    padding-top: 54px;
+html {
+	position: relative;
+	min-height: 100%;
 }
+
+body {
+	/* Margin bottom by footer height */
+	margin-bottom: 56px;
+	padding-top: 54px;
+}
+
 
 @media (min-width: 992px) {
     body {
         padding-top: 56px;
     }
+}
+
+footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	/* Set the fixed height of the footer here */
+	/*height:56px;*/
 }

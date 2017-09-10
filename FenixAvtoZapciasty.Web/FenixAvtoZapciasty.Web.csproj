@@ -76,11 +76,14 @@
   <ItemGroup>
     <Content Include="Content\css\shop-homepage.css" />
     <Content Include="index.html" />
+    <Content Include="Scripts\spa\about\about.html" />
     <Content Include="Scripts\spa\content\content.html" />
-    <Content Include="Scripts\spa\footer\footer.html" />
-    <Content Include="Scripts\spa\main.js" />
+    <Content Include="Scripts\spa\content\contentController.js" />
+    <Content Include="Scripts\spa\content\item\item.html" />
     <Content Include="Scripts\spa\menu\menu.html" />
-    <Content Include="Scripts\spa\navbar\navbar.html" />
+    <Content Include="Scripts\spa\templates\footer\footer.html" />
+    <Content Include="Scripts\spa\main.js" />
+    <Content Include="Scripts\spa\templates\navbar\navbar.html" />
     <Content Include="Scripts\vendor\bootstrap\css\bootstrap-grid.css" />
     <Content Include="Scripts\vendor\bootstrap\css\bootstrap-grid.min.css" />
     <Content Include="Scripts\vendor\bootstrap\css\bootstrap-reboot.css" />
@@ -98,7 +101,9 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Scripts\spa\contacts\" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

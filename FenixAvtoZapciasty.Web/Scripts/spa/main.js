@@ -7,17 +7,26 @@ var app = angular.module('myApp', ['ui.router'])
 				url: '/',
 				views: {
 					'navbar': {
-						templateUrl: 'Scripts/spa/navbar/navbar.html',
+						templateUrl: 'Scripts/spa/templates/navbar/navbar.html',
 					},
 					'menu': {
-						templateUrl: 'Scripts/spa/menu/menu.html',
+						templateUrl: 'Scripts/spa/menu/menu.html'
 					},
 					'content': {
 						templateUrl: 'Scripts/spa/content/content.html',
-						//controller: 'contentController'
-					},
+						controller: 'contentController'
+
+					},		
 					'footer': {
-						templateUrl: 'Scripts/spa/footer/footer.html',
+						templateUrl: 'Scripts/spa/templates/footer/footer.html',
+					}
+				}
+			})
+			.state('app.detail', {
+				url: 'detail/:id',
+				views: {
+					'content@': {
+						templateUrl:'Scripts/spa/content/item/item.html'
 					}
 				}
 			})
@@ -25,11 +34,13 @@ var app = angular.module('myApp', ['ui.router'])
 				url: 'about',
 				views: {
 					'content@': {
-						templateUrl: 'assets/views/about.html',
-						controller: 'formController'
-					}
+						templateUrl: 'Scripts/spa/about/about.html',
+						//controller: 'formController'
+					},
+					'menu@':{}
 				}
 			})
+
 			.state('app.addpage', {
 				url: 'addpage',
 				views: {
