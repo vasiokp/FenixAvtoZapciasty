@@ -1,733 +1,509 @@
-﻿<#@ template language="C#" debug="false" hostspecific="true"#>
-<#@ include file="EF6.Utility.CS.ttinclude"#><#@ 
- output extension=".cs"#><#
-
-const string inputFile = @"AutoPartsModel.edmx";
-var textTransform = DynamicTextTransformation.Create(this);
-var code = new CodeGenerationTools(this);
-var ef = new MetadataTools(this);
-var typeMapper = new TypeMapper(code, ef, textTransform.Errors);
-var	fileManager = EntityFrameworkTemplateFileManager.Create(this);
-var itemCollection = new EdmMetadataLoader(textTransform.Host, textTransform.Errors).CreateEdmItemCollection(inputFile);
-var codeStringGenerator = new CodeStringGenerator(code, typeMapper, ef);
-
-if (!typeMapper.VerifyCaseInsensitiveTypeUniqueness(typeMapper.GetAllGlobalItems(itemCollection), inputFile))
-{
-    return string.Empty;
-}
-
-WriteHeader(codeStringGenerator, fileManager);
-
-foreach (var entity in typeMapper.GetItemsToGenerate<EntityType>(itemCollection))
-{
-    fileManager.StartNewFile(entity.Name + ".cs");
-    BeginNamespace(code);
-#>
-<#=codeStringGenerator.UsingDirectives(inHeader: false)#>
-<#=codeStringGenerator.EntityClassOpening(entity)#>
-{
+﻿<#@ include file="EF.Reverse.POCO.Core.ttinclude" #>
 <#
-    var propertiesWithDefaultValues = typeMapper.GetPropertiesWithDefaultValues(entity);
-    var collectionNavigationProperties = typeMapper.GetCollectionNavigationProperties(entity);
-    var complexProperties = typeMapper.GetComplexProperties(entity);
+    // v2.32.0
+    // Please make changes to the settings below.
+    // All you have to do is save this file, and the output file(s) is/are generated. Compiling does not regenerate the file(s).
+    // A course for this generator is available on Pluralsight at https://www.pluralsight.com/courses/code-first-entity-framework-legacy-databases
 
-    if (propertiesWithDefaultValues.Any() || collectionNavigationProperties.Any() || complexProperties.Any())
+    // Main settings **********************************************************************************************************************
+    ConnectionStringName = "AutoPartsEntities";   // Searches for this connection string in config files listed below in the ConfigFilenameSearchOrder setting
+    // ConnectionStringName is the only required setting.
+    // As an alternative to ConnectionStringName above, which must match your app/web.config connection string name, you can override them below
+    //ConnectionString = "Data Source=(local);Initial Catalog=Northwind;Integrated Security=True;Application Name=EntityFramework Reverse POCO Generator";
+    //ProviderName = "System.Data.SqlClient";
+
+    // Namespace = ""; // Override the default namespace here
+    DbContextName = "MyDbContext"; // Note: If generating separate files, please give the db context a different name from this tt filename.
+    //DbContextInterfaceName = "IMyDbContext"; // Defaults to "I" + DbContextName or set string empty to not implement any interface.
+    DbContextInterfaceBaseClasses = "System.IDisposable";    // Specify what the base classes are for your database context interface
+    DbContextBaseClass = "System.Data.Entity.DbContext";   // Specify what the base class is for your DbContext. For ASP.NET Identity use "IdentityDbContext<ApplicationUser>"
+    //DefaultConstructorArgument = "EnvironmentConnectionStrings.MyDbContext"; //defaults to "Name=" + ConnectionStringName
+    ConfigurationClassName = "Configuration"; // Configuration, Mapping, Map, etc. This is appended to the Poco class name to configure the mappings.
+    ConfigFilenameSearchOrder = new[] { "app.config", "web.config" }; // Add more here if required. The config files are searched for in the local project first, then the whole solution second.
+    GenerateSeparateFiles = false;
+    MakeClassesInternal = false;
+    MakeClassesPartial = false;
+    MakeDbContextInterfacePartial = false;
+    UseMappingTables = true; // If true, mapping will be used and no mapping tables will be generated. If false, all tables will be generated.
+    UsePascalCase = true;    // This will rename the generated C# tables & properties to use PascalCase. If false table & property names will be left alone.
+    UseDataAnnotations = false; // If true, will add data annotations to the poco classes.
+    UseDataAnnotationsSchema = false; // UseDataAnnotations must also be true. If true, will add data annotations schema to the poco classes.
+    UsePropertyInitializers = false; // Removes POCO constructor and instead uses C# 6 property initialisers to set defaults
+    UseLazyLoading = true; // Marks all navigation properties as virtual or not, to support or disable EF Lazy Loading feature
+    IncludeComments = CommentsStyle.AtEndOfField; // Adds comments to the generated code
+    IncludeExtendedPropertyComments = CommentsStyle.InSummaryBlock; // Adds extended properties as comments to the generated code
+    IncludeConnectionSettingComments = true; // Add comments describing connection settings used to generate file
+    IncludeViews = true;
+    IncludeSynonyms = false;
+    IncludeStoredProcedures = true;
+    IncludeTableValuedFunctions = false; // If true, you must set IncludeStoredProcedures = true, and install the "EntityFramework.CodeFirstStoreFunctions" Nuget Package.
+    DisableGeographyTypes = false; // Turns off use of System.Data.Entity.Spatial.DbGeography and System.Data.Entity.Spatial.DbGeometry as OData doesn't support entities with geometry/geography types.
+    //CollectionInterfaceType = "System.Collections.Generic.List"; // Determines the declaration type of collections for the Navigation Properties. ICollection is used if not set.
+    CollectionType = "System.Collections.Generic.List";  // Determines the type of collection for the Navigation Properties. "ObservableCollection" for example. Add "System.Collections.ObjectModel" to AdditionalNamespaces if setting the CollectionType = "ObservableCollection".
+    NullableShortHand = true; //true => T?, false => Nullable<T>
+    AddUnitTestingDbContext = true; // Will add a FakeDbContext and FakeDbSet for easy unit testing
+    IncludeQueryTraceOn9481Flag = false; // If SqlServer 2014 appears frozen / take a long time when this file is saved, try setting this to true (you will also need elevated privileges).
+    IncludeCodeGeneratedAttribute = true; // If true, will include the GeneratedCode attribute, false to remove it.
+    UsePrivateSetterForComputedColumns = true; // If the columns is computed, use a private setter.
+    AdditionalNamespaces = new[] { "" };  // To include extra namespaces, include them here. i.e. "Microsoft.AspNet.Identity.EntityFramework"
+    AdditionalContextInterfaceItems = new[] // To include extra db context interface items, include them here. Also set MakeClassesPartial=true, and implement the partial DbContext class functions.
     {
-#>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-    public <#=code.Escape(entity)#>()
+        ""  //  example: "void SetAutoDetectChangesEnabled(bool flag);"
+    };
+    // If you need to serialize your entities with the JsonSerializer from Newtonsoft, this would serialize
+    // all properties including the Reverse Navigation and Foreign Keys. The simplest way to exclude them is
+    // to use the data annotation [JsonIgnore] on reverse navigation and foreign keys.
+    // For more control, take a look at ForeignKeyAnnotationsProcessing() further down
+    AdditionalReverseNavigationsDataAnnotations = new string[] // Data Annotations for all ReverseNavigationProperty.
     {
-<#
-        foreach (var edmProperty in propertiesWithDefaultValues)
-        {
-#>
-        this.<#=code.Escape(edmProperty)#> = <#=typeMapper.CreateLiteral(edmProperty.DefaultValue)#>;
-<#
-        }
-
-        foreach (var navigationProperty in collectionNavigationProperties)
-        {
-#>
-        this.<#=code.Escape(navigationProperty)#> = new HashSet<<#=typeMapper.GetTypeName(navigationProperty.ToEndMember.GetEntityType())#>>();
-<#
-        }
-
-        foreach (var complexProperty in complexProperties)
-        {
-#>
-        this.<#=code.Escape(complexProperty)#> = new <#=typeMapper.GetTypeName(complexProperty.TypeUsage)#>();
-<#
-        }
-#>
-    }
-
-<#
-    }
-
-    var simpleProperties = typeMapper.GetSimpleProperties(entity);
-    if (simpleProperties.Any())
+        // "JsonIgnore" // Also add "Newtonsoft.Json" to the AdditionalNamespaces array above
+    };
+    AdditionalForeignKeysDataAnnotations = new string[] // Data Annotations for all ForeignKeys.
     {
-        foreach (var edmProperty in simpleProperties)
-        {
-#>
-    <#=codeStringGenerator.Property(edmProperty)#>
-<#
-        }
-    }
-
-    if (complexProperties.Any())
+        // "JsonIgnore" // Also add "Newtonsoft.Json" to the AdditionalNamespaces array above
+    };
+    ColumnNameToDataAnnotation = new Dictionary<string, string>
     {
-#>
+        // This is used when UseDataAnnotations = true;
+        // It is used to set a data annotation on a column based on the columns name.
+        // Make sure the column name is lowercase in the following array, regardless of how it is in the database
+        // Column name       DataAnnotation to add
+        { "email",           "EmailAddress" },
+        { "emailaddress",    "EmailAddress" },
+        { "creditcard",      "CreditCard" },
+        { "url",             "Url" },
+        { "phone",           "Phone" },
+        { "phonenumber",     "Phone" },
+        { "mobile",          "Phone" },
+        { "mobilenumber",    "Phone" },
+        { "telephone",       "Phone" },
+        { "telephonenumber", "Phone" },
+        { "password",        "DataType(DataType.Password)" },
+        { "username",        "DataType(DataType.Text)" }
+    };
 
-<#
-        foreach(var complexProperty in complexProperties)
-        {
-#>
-    <#=codeStringGenerator.Property(complexProperty)#>
-<#
-        }
-    }
+    // Migrations *************************************************************************************************************************
+    MigrationConfigurationFileName = ""; // null or empty to not create migrations
+    MigrationStrategy = "MigrateDatabaseToLatestVersion"; // MigrateDatabaseToLatestVersion, CreateDatabaseIfNotExists or DropCreateDatabaseIfModelChanges
+    ContextKey = ""; // Sets the string used to distinguish migrations belonging to this configuration from migrations belonging to other configurations using the same database. This property enables migrations from multiple different models to be applied to applied to a single database.
+    AutomaticMigrationsEnabled = true;
+    AutomaticMigrationDataLossAllowed = true; // if true, can drop fields and lose data during automatic migration
 
-    var navigationProperties = typeMapper.GetNavigationProperties(entity);
-    if (navigationProperties.Any())
+    // Pluralization **********************************************************************************************************************
+    // To turn off pluralization, use:
+    //      Inflector.PluralizationService = null;
+    // Default pluralization, use:
+    //      Inflector.PluralizationService = new EnglishPluralizationService();
+    // For Spanish pluralization:
+    //      1. Intall the "EF6.Contrib" Nuget Package.
+    //      2. Add the following to the top of this file and adjust path, and remove the space between the angle bracket and # at the beginning and end.
+    //         < #@ assembly name="your full path to \EntityFramework.Contrib.dll" # >
+    //      3. Change the line below to: Inflector.PluralizationService = new SpanishPluralizationService();
+    Inflector.PluralizationService = new EnglishPluralizationService();
+    // If pluralisation does not do the right thing, override it here by adding in a custom entry.
+    //Inflector.PluralizationService = new EnglishPluralizationService(new[]
+    //{
+    //    // Create custom ("Singular", "Plural") forms for one-off words as needed.
+    //    new CustomPluralizationEntry("Course", "Courses"),
+    //    new CustomPluralizationEntry("Status", "Status") // Use same value to prevent pluralisation
+    //});
+
+
+    // Elements to generate ***************************************************************************************************************
+    // Add the elements that should be generated when the template is executed.
+    // Multiple projects can now be used that separate the different concerns.
+    ElementsToGenerate = Elements.Poco | Elements.Context | Elements.UnitOfWork | Elements.PocoConfiguration;
+
+    // Use these namespaces to specify where the different elements now live. These may even be in different assemblies.
+    // Please note this does not create the files in these locations, it only adds a using statement to say where they are.
+    // The way to do this is to add the "EntityFramework Reverse POCO Code First Generator" into each of these folders.
+    // Then set the .tt to only generate the relevant section you need by setting
+    //      ElementsToGenerate = Elements.Poco; in your Entity folder,
+    //      ElementsToGenerate = Elements.Context | Elements.UnitOfWork; in your Context folder,
+    //      ElementsToGenerate = Elements.PocoConfiguration; in your Maps folder.
+    //      PocoNamespace = "YourProject.Entities";
+    //      ContextNamespace = "YourProject.Context";
+    //      UnitOfWorkNamespace = "YourProject.Context";
+    //      PocoConfigurationNamespace = "YourProject.Maps";
+    // You also need to set the following to the namespace where they now live:
+    PocoNamespace = "";
+    ContextNamespace = "";
+    UnitOfWorkNamespace = "";
+    PocoConfigurationNamespace = "";
+
+
+    // Schema *****************************************************************************************************************************
+    // If there are multiple schemas, then the table name is prefixed with the schema, except for dbo.
+    // Ie. dbo.hello will be Hello.
+    //     abc.hello will be AbcHello.
+    PrependSchemaName = true;   // Control if the schema name is prepended to the table name
+
+    // Table Suffix ***********************************************************************************************************************
+    // Prepends the suffix to the generated classes names
+    // Ie. If TableSuffix is "Dto" then Order will be OrderDto
+    //     If TableSuffix is "Entity" then Order will be OrderEntity
+    TableSuffix = null;
+
+    // Filtering **************************************************************************************************************************
+    // Use the following table/view name regex filters to include or exclude tables/views
+    // Exclude filters are checked first and tables matching filters are removed.
+    //  * If left null, none are excluded.
+    //  * If not null, any tables matching the regex are excluded.
+    // Include filters are checked second.
+    //  * If left null, all are included.
+    //  * If not null, only the tables matching the regex are included.
+    // For clarity: if you want to include all the customer tables, but not the customer billing tables.
+    //      TableFilterInclude = new Regex("^[Cc]ustomer.*"); // This includes all the customer and customer billing tables
+    //      TableFilterExclude = new Regex(".*[Bb]illing.*"); // This excludes all the billing tables
+    //
+    // Example:     TableFilterExclude = new Regex(".*auto.*");
+    //              TableFilterInclude = new Regex("(.*_FR_.*)|(data_.*)");
+    //              TableFilterInclude = new Regex("^table_name1$|^table_name2$|etc");
+    //              ColumnFilterExclude = new Regex("^FK_.*$");
+    SchemaFilterExclude = null;
+    SchemaFilterInclude = null;
+    TableFilterExclude = null;
+    TableFilterInclude = null;
+    ColumnFilterExclude = null;
+
+    // Filtering of tables using a function. This can be used in conjunction with the Regex's above.
+    // Regex are used first to filter the list down, then this function is run last.
+    // Return true to include the table, return false to exclude it.
+    TableFilter = (Table t) =>
     {
-#>
+        // Example: Exclude any table in dbo schema with "order" in its name.
+        //if(t.Schema.Equals("dbo", StringComparison.InvariantCultureIgnoreCase) && t.NameHumanCase.ToLowerInvariant().Contains("order"))
+        //    return false;
 
-<#
-        foreach (var navigationProperty in navigationProperties)
-        {
-            if (navigationProperty.ToEndMember.RelationshipMultiplicity == RelationshipMultiplicity.Many)
-            {
-#>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-<#
-            }
-#>
-    <#=codeStringGenerator.NavigationProperty(navigationProperty)#>
-<#
-        }
-    }
-#>
-}
-<#
-    EndNamespace(code);
-}
-
-foreach (var complex in typeMapper.GetItemsToGenerate<ComplexType>(itemCollection))
-{
-    fileManager.StartNewFile(complex.Name + ".cs");
-    BeginNamespace(code);
-#>
-<#=codeStringGenerator.UsingDirectives(inHeader: false, includeCollections: false)#>
-<#=Accessibility.ForType(complex)#> partial class <#=code.Escape(complex)#>
-{
-<#
-    var complexProperties = typeMapper.GetComplexProperties(complex);
-    var propertiesWithDefaultValues = typeMapper.GetPropertiesWithDefaultValues(complex);
-
-    if (propertiesWithDefaultValues.Any() || complexProperties.Any())
-    {
-#>
-    public <#=code.Escape(complex)#>()
-    {
-<#
-        foreach (var edmProperty in propertiesWithDefaultValues)
-        {
-#>
-        this.<#=code.Escape(edmProperty)#> = <#=typeMapper.CreateLiteral(edmProperty.DefaultValue)#>;
-<#
-        }
-
-        foreach (var complexProperty in complexProperties)
-        {
-#>
-        this.<#=code.Escape(complexProperty)#> = new <#=typeMapper.GetTypeName(complexProperty.TypeUsage)#>();
-<#
-        }
-#>
-    }
-
-<#
-    }
-
-    var simpleProperties = typeMapper.GetSimpleProperties(complex);
-    if (simpleProperties.Any())
-    {
-        foreach(var edmProperty in simpleProperties)
-        {
-#>
-    <#=codeStringGenerator.Property(edmProperty)#>
-<#
-        }
-    }
-
-    if (complexProperties.Any())
-    {
-#>
-
-<#
-        foreach(var edmProperty in complexProperties)
-        {
-#>
-    <#=codeStringGenerator.Property(edmProperty)#>
-<#
-        }
-    }
-#>
-}
-<#
-    EndNamespace(code);
-}
-
-foreach (var enumType in typeMapper.GetEnumItemsToGenerate(itemCollection))
-{
-    fileManager.StartNewFile(enumType.Name + ".cs");
-    BeginNamespace(code);
-#>
-<#=codeStringGenerator.UsingDirectives(inHeader: false, includeCollections: false)#>
-<#
-    if (typeMapper.EnumIsFlags(enumType))
-    {
-#>
-[Flags]
-<#
-    }
-#>
-<#=codeStringGenerator.EnumOpening(enumType)#>
-{
-<#
-    var foundOne = false;
-    
-    foreach (MetadataItem member in typeMapper.GetEnumMembers(enumType))
-    {
-        foundOne = true;
-#>
-    <#=code.Escape(typeMapper.GetEnumMemberName(member))#> = <#=typeMapper.GetEnumMemberValue(member)#>,
-<#
-    }
-
-    if (foundOne)
-    {
-        this.GenerationEnvironment.Remove(this.GenerationEnvironment.Length - 3, 1);
-    }
-#>
-}
-<#
-    EndNamespace(code);
-}
-
-fileManager.Process();
-
-#>
-<#+
-
-public void WriteHeader(CodeStringGenerator codeStringGenerator, EntityFrameworkTemplateFileManager fileManager)
-{
-    fileManager.StartHeader();
-#>
-//------------------------------------------------------------------------------
-// <auto-generated>
-// <#=CodeGenerationTools.GetResourceString("Template_GeneratedCodeCommentLine1")#>
-//
-// <#=CodeGenerationTools.GetResourceString("Template_GeneratedCodeCommentLine2")#>
-// <#=CodeGenerationTools.GetResourceString("Template_GeneratedCodeCommentLine3")#>
-// </auto-generated>
-//------------------------------------------------------------------------------
-<#=codeStringGenerator.UsingDirectives(inHeader: true)#>
-<#+
-    fileManager.EndBlock();
-}
-
-public void BeginNamespace(CodeGenerationTools code)
-{
-    var codeNamespace = code.VsNamespaceSuggestion();
-    if (!String.IsNullOrEmpty(codeNamespace))
-    {
-#>
-namespace <#=code.EscapeNamespace(codeNamespace)#>
-{
-<#+
-        PushIndent("    ");
-    }
-}
-
-public void EndNamespace(CodeGenerationTools code)
-{
-    if (!String.IsNullOrEmpty(code.VsNamespaceSuggestion()))
-    {
-        PopIndent();
-#>
-}
-<#+
-    }
-}
-
-public const string TemplateId = "CSharp_DbContext_Types_EF6";
-
-public class CodeStringGenerator
-{
-    private readonly CodeGenerationTools _code;
-    private readonly TypeMapper _typeMapper;
-    private readonly MetadataTools _ef;
-
-    public CodeStringGenerator(CodeGenerationTools code, TypeMapper typeMapper, MetadataTools ef)
-    {
-        ArgumentNotNull(code, "code");
-        ArgumentNotNull(typeMapper, "typeMapper");
-        ArgumentNotNull(ef, "ef");
-
-        _code = code;
-        _typeMapper = typeMapper;
-        _ef = ef;
-    }
-
-    public string Property(EdmProperty edmProperty)
-    {
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} {1} {2} {{ {3}get; {4}set; }}",
-            Accessibility.ForProperty(edmProperty),
-            _typeMapper.GetTypeName(edmProperty.TypeUsage),
-            _code.Escape(edmProperty),
-            _code.SpaceAfter(Accessibility.ForGetter(edmProperty)),
-            _code.SpaceAfter(Accessibility.ForSetter(edmProperty)));
-    }
-
-    public string NavigationProperty(NavigationProperty navProp)
-    {
-        var endType = _typeMapper.GetTypeName(navProp.ToEndMember.GetEntityType());
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} {1} {2} {{ {3}get; {4}set; }}",
-            AccessibilityAndVirtual(Accessibility.ForNavigationProperty(navProp)),
-            navProp.ToEndMember.RelationshipMultiplicity == RelationshipMultiplicity.Many ? ("ICollection<" + endType + ">") : endType,
-            _code.Escape(navProp),
-            _code.SpaceAfter(Accessibility.ForGetter(navProp)),
-            _code.SpaceAfter(Accessibility.ForSetter(navProp)));
-    }
-    
-    public string AccessibilityAndVirtual(string accessibility)
-    {
-        return accessibility + (accessibility != "private" ? " virtual" : "");
-    }
-    
-    public string EntityClassOpening(EntityType entity)
-    {
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} {1}partial class {2}{3}",
-            Accessibility.ForType(entity),
-            _code.SpaceAfter(_code.AbstractOption(entity)),
-            _code.Escape(entity),
-            _code.StringBefore(" : ", _typeMapper.GetTypeName(entity.BaseType)));
-    }
-    
-    public string EnumOpening(SimpleType enumType)
-    {
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} enum {1} : {2}",
-            Accessibility.ForType(enumType),
-            _code.Escape(enumType),
-            _code.Escape(_typeMapper.UnderlyingClrType(enumType)));
-        }
-    
-    public void WriteFunctionParameters(EdmFunction edmFunction, Action<string, string, string, string> writeParameter)
-    {
-        var parameters = FunctionImportParameter.Create(edmFunction.Parameters, _code, _ef);
-        foreach (var parameter in parameters.Where(p => p.NeedsLocalVariable))
-        {
-            var isNotNull = parameter.IsNullableOfT ? parameter.FunctionParameterName + ".HasValue" : parameter.FunctionParameterName + " != null";
-            var notNullInit = "new ObjectParameter(\"" + parameter.EsqlParameterName + "\", " + parameter.FunctionParameterName + ")";
-            var nullInit = "new ObjectParameter(\"" + parameter.EsqlParameterName + "\", typeof(" + TypeMapper.FixNamespaces(parameter.RawClrTypeName) + "))";
-            writeParameter(parameter.LocalVariableName, isNotNull, notNullInit, nullInit);
-        }
-    }
-    
-    public string ComposableFunctionMethod(EdmFunction edmFunction, string modelNamespace)
-    {
-        var parameters = _typeMapper.GetParameters(edmFunction);
-        
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} IQueryable<{1}> {2}({3})",
-            AccessibilityAndVirtual(Accessibility.ForMethod(edmFunction)),
-            _typeMapper.GetTypeName(_typeMapper.GetReturnType(edmFunction), modelNamespace),
-            _code.Escape(edmFunction),
-            string.Join(", ", parameters.Select(p => TypeMapper.FixNamespaces(p.FunctionParameterType) + " " + p.FunctionParameterName).ToArray()));
-    }
-    
-    public string ComposableCreateQuery(EdmFunction edmFunction, string modelNamespace)
-    {
-        var parameters = _typeMapper.GetParameters(edmFunction);
-        
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "return ((IObjectContextAdapter)this).ObjectContext.CreateQuery<{0}>(\"[{1}].[{2}]({3})\"{4});",
-            _typeMapper.GetTypeName(_typeMapper.GetReturnType(edmFunction), modelNamespace),
-            edmFunction.NamespaceName,
-            edmFunction.Name,
-            string.Join(", ", parameters.Select(p => "@" + p.EsqlParameterName).ToArray()),
-            _code.StringBefore(", ", string.Join(", ", parameters.Select(p => p.ExecuteParameterName).ToArray())));
-    }
-    
-    public string FunctionMethod(EdmFunction edmFunction, string modelNamespace, bool includeMergeOption)
-    {
-        var parameters = _typeMapper.GetParameters(edmFunction);
-        var returnType = _typeMapper.GetReturnType(edmFunction);
-
-        var paramList = String.Join(", ", parameters.Select(p => TypeMapper.FixNamespaces(p.FunctionParameterType) + " " + p.FunctionParameterName).ToArray());
-        if (includeMergeOption)
-        {
-            paramList = _code.StringAfter(paramList, ", ") + "MergeOption mergeOption";
-        }
-
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} {1} {2}({3})",
-            AccessibilityAndVirtual(Accessibility.ForMethod(edmFunction)),
-            returnType == null ? "int" : "ObjectResult<" + _typeMapper.GetTypeName(returnType, modelNamespace) + ">",
-            _code.Escape(edmFunction),
-            paramList);
-    }
-    
-    public string ExecuteFunction(EdmFunction edmFunction, string modelNamespace, bool includeMergeOption)
-    {
-        var parameters = _typeMapper.GetParameters(edmFunction);
-        var returnType = _typeMapper.GetReturnType(edmFunction);
-
-        var callParams = _code.StringBefore(", ", String.Join(", ", parameters.Select(p => p.ExecuteParameterName).ToArray()));
-        if (includeMergeOption)
-        {
-            callParams = ", mergeOption" + callParams;
-        }
-        
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction{0}(\"{1}\"{2});",
-            returnType == null ? "" : "<" + _typeMapper.GetTypeName(returnType, modelNamespace) + ">",
-            edmFunction.Name,
-            callParams);
-    }
-    
-    public string DbSet(EntitySet entitySet)
-    {
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} virtual DbSet<{1}> {2} {{ get; set; }}",
-            Accessibility.ForReadOnlyProperty(entitySet),
-            _typeMapper.GetTypeName(entitySet.ElementType),
-            _code.Escape(entitySet));
-    }
-
-    public string UsingDirectives(bool inHeader, bool includeCollections = true)
-    {
-        return inHeader == string.IsNullOrEmpty(_code.VsNamespaceSuggestion())
-            ? string.Format(
-                CultureInfo.InvariantCulture,
-                "{0}using System;{1}" +
-                "{2}",
-                inHeader ? Environment.NewLine : "",
-                includeCollections ? (Environment.NewLine + "using System.Collections.Generic;") : "",
-                inHeader ? "" : Environment.NewLine)
-            : "";
-    }
-}
-
-public class TypeMapper
-{
-    private const string ExternalTypeNameAttributeName = @"http://schemas.microsoft.com/ado/2006/04/codegeneration:ExternalTypeName";
-
-    private readonly System.Collections.IList _errors;
-    private readonly CodeGenerationTools _code;
-    private readonly MetadataTools _ef;
-
-    public TypeMapper(CodeGenerationTools code, MetadataTools ef, System.Collections.IList errors)
-    {
-        ArgumentNotNull(code, "code");
-        ArgumentNotNull(ef, "ef");
-        ArgumentNotNull(errors, "errors");
-
-        _code = code;
-        _ef = ef;
-        _errors = errors;
-    }
-
-    public static string FixNamespaces(string typeName)
-    {
-        return typeName.Replace("System.Data.Spatial.", "System.Data.Entity.Spatial.");
-    }
-
-    public string GetTypeName(TypeUsage typeUsage)
-    {
-        return typeUsage == null ? null : GetTypeName(typeUsage.EdmType, _ef.IsNullable(typeUsage), modelNamespace: null);
-    }
-
-    public string GetTypeName(EdmType edmType)
-    {
-        return GetTypeName(edmType, isNullable: null, modelNamespace: null);
-    }
-
-    public string GetTypeName(TypeUsage typeUsage, string modelNamespace)
-    {
-        return typeUsage == null ? null : GetTypeName(typeUsage.EdmType, _ef.IsNullable(typeUsage), modelNamespace);
-    }
-
-    public string GetTypeName(EdmType edmType, string modelNamespace)
-    {
-        return GetTypeName(edmType, isNullable: null, modelNamespace: modelNamespace);
-    }
-
-    public string GetTypeName(EdmType edmType, bool? isNullable, string modelNamespace)
-    {
-        if (edmType == null)
-        {
-            return null;
-        }
-
-        var collectionType = edmType as CollectionType;
-        if (collectionType != null)
-        {
-            return String.Format(CultureInfo.InvariantCulture, "ICollection<{0}>", GetTypeName(collectionType.TypeUsage, modelNamespace));
-        }
-
-        var typeName = _code.Escape(edmType.MetadataProperties
-                                .Where(p => p.Name == ExternalTypeNameAttributeName)
-                                .Select(p => (string)p.Value)
-                                .FirstOrDefault())
-            ?? (modelNamespace != null && edmType.NamespaceName != modelNamespace ?
-                _code.CreateFullName(_code.EscapeNamespace(edmType.NamespaceName), _code.Escape(edmType)) :
-                _code.Escape(edmType));
-
-        if (edmType is StructuralType)
-        {
-            return typeName;
-        }
-
-        if (edmType is SimpleType)
-        {
-            var clrType = UnderlyingClrType(edmType);
-            if (!IsEnumType(edmType))
-            {
-                typeName = _code.Escape(clrType);
-            }
-
-            typeName = FixNamespaces(typeName);
-
-            return clrType.IsValueType && isNullable == true ?
-                String.Format(CultureInfo.InvariantCulture, "Nullable<{0}>", typeName) :
-                typeName;
-        }
-
-        throw new ArgumentException("edmType");
-    }
-    
-    public Type UnderlyingClrType(EdmType edmType)
-    {
-        ArgumentNotNull(edmType, "edmType");
-
-        var primitiveType = edmType as PrimitiveType;
-        if (primitiveType != null)
-        {
-            return primitiveType.ClrEquivalentType;
-        }
-
-        if (IsEnumType(edmType))
-        {
-            return GetEnumUnderlyingType(edmType).ClrEquivalentType;
-        }
-
-        return typeof(object);
-    }
-    
-    public object GetEnumMemberValue(MetadataItem enumMember)
-    {
-        ArgumentNotNull(enumMember, "enumMember");
-        
-        var valueProperty = enumMember.GetType().GetProperty("Value");
-        return valueProperty == null ? null : valueProperty.GetValue(enumMember, null);
-    }
-    
-    public string GetEnumMemberName(MetadataItem enumMember)
-    {
-        ArgumentNotNull(enumMember, "enumMember");
-        
-        var nameProperty = enumMember.GetType().GetProperty("Name");
-        return nameProperty == null ? null : (string)nameProperty.GetValue(enumMember, null);
-    }
-
-    public System.Collections.IEnumerable GetEnumMembers(EdmType enumType)
-    {
-        ArgumentNotNull(enumType, "enumType");
-
-        var membersProperty = enumType.GetType().GetProperty("Members");
-        return membersProperty != null 
-            ? (System.Collections.IEnumerable)membersProperty.GetValue(enumType, null)
-            : Enumerable.Empty<MetadataItem>();
-    }
-    
-    public bool EnumIsFlags(EdmType enumType)
-    {
-        ArgumentNotNull(enumType, "enumType");
-        
-        var isFlagsProperty = enumType.GetType().GetProperty("IsFlags");
-        return isFlagsProperty != null && (bool)isFlagsProperty.GetValue(enumType, null);
-    }
-
-    public bool IsEnumType(GlobalItem edmType)
-    {
-        ArgumentNotNull(edmType, "edmType");
-
-        return edmType.GetType().Name == "EnumType";
-    }
-
-    public PrimitiveType GetEnumUnderlyingType(EdmType enumType)
-    {
-        ArgumentNotNull(enumType, "enumType");
-
-        return (PrimitiveType)enumType.GetType().GetProperty("UnderlyingType").GetValue(enumType, null);
-    }
-
-    public string CreateLiteral(object value)
-    {
-        if (value == null || value.GetType() != typeof(TimeSpan))
-        {
-            return _code.CreateLiteral(value);
-        }
-
-        return string.Format(CultureInfo.InvariantCulture, "new TimeSpan({0})", ((TimeSpan)value).Ticks);
-    }
-    
-    public bool VerifyCaseInsensitiveTypeUniqueness(IEnumerable<string> types, string sourceFile)
-    {
-        ArgumentNotNull(types, "types");
-        ArgumentNotNull(sourceFile, "sourceFile");
-        
-        var hash = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-        if (types.Any(item => !hash.Add(item)))
-        {
-            _errors.Add(
-                new CompilerError(sourceFile, -1, -1, "6023",
-                    String.Format(CultureInfo.CurrentCulture, CodeGenerationTools.GetResourceString("Template_CaseInsensitiveTypeConflict"))));
-            return false;
-        }
         return true;
-    }
-    
-    public IEnumerable<SimpleType> GetEnumItemsToGenerate(IEnumerable<GlobalItem> itemCollection)
-    {
-        return GetItemsToGenerate<SimpleType>(itemCollection)
-            .Where(e => IsEnumType(e));
-    }
-    
-    public IEnumerable<T> GetItemsToGenerate<T>(IEnumerable<GlobalItem> itemCollection) where T: EdmType
-    {
-        return itemCollection
-            .OfType<T>()
-            .Where(i => !i.MetadataProperties.Any(p => p.Name == ExternalTypeNameAttributeName))
-            .OrderBy(i => i.Name);
-    }
+    };
 
-    public IEnumerable<string> GetAllGlobalItems(IEnumerable<GlobalItem> itemCollection)
-    {
-        return itemCollection
-            .Where(i => i is EntityType || i is ComplexType || i is EntityContainer || IsEnumType(i))
-            .Select(g => GetGlobalItemName(g));
-    }
 
-    public string GetGlobalItemName(GlobalItem item)
+    // Stored Procedures ******************************************************************************************************************
+    // Use the following regex filters to include or exclude stored procedures
+    StoredProcedureFilterExclude = null;
+    StoredProcedureFilterInclude = null;
+
+    // Filtering of stored procedures using a function. This can be used in conjunction with the Regex's above.
+    // Regex are used first to filter the list down, then this function is run last.
+    // Return true to include the stored procedure, return false to exclude it.
+    StoredProcedureFilter = (StoredProcedure sp) =>
     {
-        if (item is EdmType)
+        // Example: Exclude any stored procedure in dbo schema with "order" in its name.
+        //if(sp.Schema.Equals("dbo", StringComparison.InvariantCultureIgnoreCase) && sp.NameHumanCase.ToLowerInvariant().Contains("order"))
+        //    return false;
+
+        return true;
+    };
+
+
+    // Table renaming *********************************************************************************************************************
+    // Use the following function to rename tables such as tblOrders to Orders, Shipments_AB to Shipments, etc.
+    // Example:
+    TableRename = (string name, string schema, bool isView) =>
+    {
+        // Example
+        //if (name.StartsWith("tbl"))
+        //    name = name.Remove(0, 3);
+        //name = name.Replace("_AB", "");
+
+        //if(isView)
+        //    name = name + "View";
+
+        // If you turn pascal casing off (UsePascalCase = false), and use the pluralisation service, and some of your
+        // tables names are all UPPERCASE, some words ending in IES such as CATEGORIES get singularised as CATEGORy.
+        // Therefore you can make them lowercase by using the following
+        // return Inflector.MakeLowerIfAllCaps(name);
+
+        // If you are using the pluralisation service and you want to rename a table, make sure you rename the table to the plural form.
+        // For example, if the table is called Treez (with a z), and your pluralisation entry is
+        //     new CustomPluralizationEntry("Tree", "Trees")
+        // Use this TableRename function to rename Treez to the plural (not singular) form, Trees:
+        // if (name == "Treez") return "Trees";
+
+        return name;
+    };
+
+    // Column modification*****************************************************************************************************************
+    // Use the following list to replace column byte types with Enums.
+    // As long as the type can be mapped to your new type, all is well.
+    //EnumsDefinitions.Add(new EnumDefinition { Schema = "dbo", Table = "match_table_name", Column = "match_column_name", EnumType = "name_of_enum" });
+    //EnumsDefinitions.Add(new EnumDefinition { Schema = "dbo", Table = "OrderHeader", Column = "OrderStatus", EnumType = "OrderStatusType" }); // This will replace OrderHeader.OrderStatus type to be an OrderStatusType enum
+
+    // Use the following function if you need to apply additional modifications to a column
+    // eg. normalise names etc.
+    UpdateColumn = (Column column, Table table) =>
+    {
+        // Rename column
+        //if (column.IsPrimaryKey && column.NameHumanCase == "PkId")
+        //    column.NameHumanCase = "Id";
+
+        // .IsConcurrencyToken() must be manually configured. However .IsRowVersion() can be automatically detected.
+        //if (table.NameHumanCase.Equals("SomeTable", StringComparison.InvariantCultureIgnoreCase) && column.NameHumanCase.Equals("SomeColumn", StringComparison.InvariantCultureIgnoreCase))
+        //    column.IsConcurrencyToken = true;
+
+        // Remove table name from primary key
+        //if (column.IsPrimaryKey && column.NameHumanCase.Equals(table.NameHumanCase + "Id", StringComparison.InvariantCultureIgnoreCase))
+        //    column.NameHumanCase = "Id";
+
+        // Remove column from poco class as it will be inherited from a base class
+        //if (column.IsPrimaryKey && table.NameHumanCase.Equals("SomeTable", StringComparison.InvariantCultureIgnoreCase))
+        //    column.Hidden = true;
+
+        // Apply the "override" access modifier to a specific column.
+        // if (column.NameHumanCase == "id")
+        //    column.OverrideModifier = true;
+        // This will create: public override long id { get; set; }
+
+        // Perform Enum property type replacement
+        var enumDefinition = EnumsDefinitions.FirstOrDefault(e =>
+            (e.Schema.Equals(table.Schema, StringComparison.InvariantCultureIgnoreCase)) &&
+            (e.Table.Equals(table.Name, StringComparison.InvariantCultureIgnoreCase) || e.Table.Equals(table.NameHumanCase, StringComparison.InvariantCultureIgnoreCase)) &&
+            (e.Column.Equals(column.Name, StringComparison.InvariantCultureIgnoreCase) || e.Column.Equals(column.NameHumanCase, StringComparison.InvariantCultureIgnoreCase)));
+
+        if (enumDefinition != null)
         {
-            return ((EdmType)item).Name;
+            column.PropertyType = enumDefinition.EnumType;
+            if(!string.IsNullOrEmpty(column.Default))
+                column.Default = "(" + enumDefinition.EnumType + ") " + column.Default;
         }
-        else
+
+        return column;
+    };
+
+    // StoredProcedure renaming ************************************************************************************************************
+    // Use the following function to rename stored procs such as sp_CreateOrderHistory to CreateOrderHistory, my_sp_shipments to Shipments, etc.
+    // Example:
+    /*StoredProcedureRename = (sp) =>
+    {
+        if (sp.NameHumanCase.StartsWith("sp_"))
+            return sp.NameHumanCase.Remove(0, 3);
+        return sp.NameHumanCase.Replace("my_sp_", "");
+    };*/
+    StoredProcedureRename = (sp) => sp.NameHumanCase;   // Do nothing by default
+
+    // Use the following function to rename the return model automatically generated for stored procedure.
+    // By default it's <proc_name>ReturnModel.
+    // Example:
+    /*StoredProcedureReturnModelRename = (name, sp) =>
+    {
+        if (sp.NameHumanCase.Equals("ComputeValuesForDate", StringComparison.InvariantCultureIgnoreCase))
+            return "ValueSet";
+        if (sp.NameHumanCase.Equals("SalesByYear", StringComparison.InvariantCultureIgnoreCase))
+            return "SalesSet";
+
+        return name;
+    };*/
+    StoredProcedureReturnModelRename = (name, sp) => name; // Do nothing by default
+
+    // StoredProcedure return types *******************************************************************************************************
+    // Override generation of return models for stored procedures that return entities.
+    // If a stored procedure returns an entity, add it to the list below.
+    // This will suppress the generation of the return model, and instead return the entity.
+    // Example:                       Proc name      Return this entity type instead
+    //StoredProcedureReturnTypes.Add("SalesByYear", "SummaryOfSalesByYear");
+
+
+    // Callbacks **********************************************************************************************************************
+    // This method will be called right before we write the POCO header.
+    Action<Table> WritePocoClassAttributes = t =>
+    {
+        if (UseDataAnnotations)
         {
-            return ((EntityContainer)item).Name;
+            foreach (var dataAnnotation in t.DataAnnotations)
+            {
+                WriteLine("    [" + dataAnnotation + "]");
+            }
         }
-    }
 
-    public IEnumerable<EdmProperty> GetSimpleProperties(EntityType type)
-    {
-        return type.Properties.Where(p => p.TypeUsage.EdmType is SimpleType && p.DeclaringType == type);
-    }
-    
-    public IEnumerable<EdmProperty> GetSimpleProperties(ComplexType type)
-    {
-        return type.Properties.Where(p => p.TypeUsage.EdmType is SimpleType && p.DeclaringType == type);
-    }
-    
-    public IEnumerable<EdmProperty> GetComplexProperties(EntityType type)
-    {
-        return type.Properties.Where(p => p.TypeUsage.EdmType is ComplexType && p.DeclaringType == type);
-    }
-    
-    public IEnumerable<EdmProperty> GetComplexProperties(ComplexType type)
-    {
-        return type.Properties.Where(p => p.TypeUsage.EdmType is ComplexType && p.DeclaringType == type);
-    }
+        // if(t.ClassName.StartsWith("Order"))
+        //     WriteLine("    [SomeAttribute]");
+    };
 
-    public IEnumerable<EdmProperty> GetPropertiesWithDefaultValues(EntityType type)
+    // Writes optional base classes
+    Func<Table, string> WritePocoBaseClasses = t =>
     {
-        return type.Properties.Where(p => p.TypeUsage.EdmType is SimpleType && p.DeclaringType == type && p.DefaultValue != null);
-    }
-    
-    public IEnumerable<EdmProperty> GetPropertiesWithDefaultValues(ComplexType type)
-    {
-        return type.Properties.Where(p => p.TypeUsage.EdmType is SimpleType && p.DeclaringType == type && p.DefaultValue != null);
-    }
+        //if (t.ClassName == "User")
+        //    return ": IdentityUser<int, CustomUserLogin, CustomUserRole, CustomUserClaim>";
 
-    public IEnumerable<NavigationProperty> GetNavigationProperties(EntityType type)
-    {
-        return type.NavigationProperties.Where(np => np.DeclaringType == type);
-    }
-    
-    public IEnumerable<NavigationProperty> GetCollectionNavigationProperties(EntityType type)
-    {
-        return type.NavigationProperties.Where(np => np.DeclaringType == type && np.ToEndMember.RelationshipMultiplicity == RelationshipMultiplicity.Many);
-    }
-    
-    public FunctionParameter GetReturnParameter(EdmFunction edmFunction)
-    {
-        ArgumentNotNull(edmFunction, "edmFunction");
+        // Or use the maker class to dynamically build more complex definitions
+        /* Example:
+        var r = new BaseClassMaker("POCO.Sample.Data.MetaModelObject");
+        r.AddInterface("POCO.Sample.Data.IObjectWithTableName");
+        r.AddInterface("POCO.Sample.Data.IObjectWithId",
+            t.Columns.Any(x => x.IsPrimaryKey && !x.IsNullable && x.NameHumanCase.Equals("Id", StringComparison.InvariantCultureIgnoreCase) && x.PropertyType == "long"));
+        r.AddInterface("POCO.Sample.Data.IObjectWithUserId",
+            t.Columns.Any(x => !x.IsPrimaryKey && !x.IsNullable && x.NameHumanCase.Equals("UserId", StringComparison.InvariantCultureIgnoreCase) && x.PropertyType == "long"));
+        return r.ToString();
+        */
 
-        var returnParamsProperty = edmFunction.GetType().GetProperty("ReturnParameters");
-        return returnParamsProperty == null
-            ? edmFunction.ReturnParameter
-            : ((IEnumerable<FunctionParameter>)returnParamsProperty.GetValue(edmFunction, null)).FirstOrDefault();
-    }
+        return "";
+    };
 
-    public bool IsComposable(EdmFunction edmFunction)
+    // Writes any boilerplate stuff
+    Action<Table> WritePocoBaseClassBody = t =>
     {
-        ArgumentNotNull(edmFunction, "edmFunction");
+        // Do nothing by default
+        // Example:
+        // WriteLine("        // " + t.ClassName);
+    };
 
-        var isComposableProperty = edmFunction.GetType().GetProperty("IsComposableAttribute");
-        return isComposableProperty != null && (bool)isComposableProperty.GetValue(edmFunction, null);
-    }
+    Func<Column, string> WritePocoColumn = c =>
+    {
+        bool commentWritten = false;
+        if((IncludeExtendedPropertyComments == CommentsStyle.InSummaryBlock || IncludeComments == CommentsStyle.InSummaryBlock) && !string.IsNullOrEmpty(c.SummaryComments))
+        {
+            WriteLine(string.Empty);
+            WriteLine("        ///<summary>");
+            WriteLine("        /// {0}", System.Security.SecurityElement.Escape(c.SummaryComments));
+            WriteLine("        ///</summary>");
+            commentWritten = true;
+        }
+        if (UseDataAnnotations)
+        {
+            if(c.Ordinal > 1 && !commentWritten)
+                WriteLine(string.Empty);    // Leave a blank line before the next property
 
-    public IEnumerable<FunctionImportParameter> GetParameters(EdmFunction edmFunction)
-    {
-        return FunctionImportParameter.Create(edmFunction.Parameters, _code, _ef);
-    }
+            foreach (var dataAnnotation in c.DataAnnotations)
+            {
+                WriteLine("        [" + dataAnnotation + "]");
+            }
+        }
 
-    public TypeUsage GetReturnType(EdmFunction edmFunction)
-    {
-        var returnParam = GetReturnParameter(edmFunction);
-        return returnParam == null ? null : _ef.GetElementType(returnParam.TypeUsage);
-    }
-    
-    public bool GenerateMergeOptionFunction(EdmFunction edmFunction, bool includeMergeOption)
-    {
-        var returnType = GetReturnType(edmFunction);
-        return !includeMergeOption && returnType != null && returnType.EdmType.BuiltInTypeKind == BuiltInTypeKind.EntityType;
-    }
-}
+        // Example of adding a [Required] data annotation attribute to all non-null fields
+        //if (!c.IsNullable)
+        //    return "        [System.ComponentModel.DataAnnotations.Required] " + c.Entity;
 
-public static void ArgumentNotNull<T>(T arg, string name) where T : class
-{
-    if (arg == null)
+        return "        " + c.Entity;
+    };
+
+    ForeignKeyFilter = (ForeignKey fk) =>
     {
-        throw new ArgumentNullException(name);
-    }
-}
+        // Return null to exclude this foreign key, or set IncludeReverseNavigation = false
+        // to include the foreign key but not generate reverse navigation properties.
+        // Example, to exclude all foreign keys for the Categories table, use:
+        // if (fk.PkTableName == "Categories")
+        //    return null;
+
+        // Example, to exclude reverse navigation properties for tables ending with Type, use:
+        // if (fk.PkTableName.EndsWith("Type"))
+        //    fk.IncludeReverseNavigation = false;
+
+        return fk;
+    };
+
+    ForeignKeyProcessing = (foreignKeys, fkTable, pkTable, anyNullableColumnInForeignKey) =>
+    {
+        var foreignKey = foreignKeys.First();
+
+        // If using data annotations and to include the [Required] attribute in the foreign key, enable the following
+        //if (!anyNullableColumnInForeignKey)
+        //   foreignKey.IncludeRequiredAttribute = true;
+
+        return foreignKey;
+    };
+
+    ForeignKeyName = (tableName, foreignKey, foreignKeyName, relationship, attempt) =>
+    {
+        string fkName;
+
+        // 5 Attempts to correctly name the foreign key
+        switch (attempt)
+        {
+            case 1:
+                // Try without appending foreign key name
+                fkName = tableName;
+                break;
+
+            case 2:
+                // Only called if foreign key name ends with "id"
+                // Use foreign key name without "id" at end of string
+                fkName = foreignKeyName.Remove(foreignKeyName.Length-2, 2);
+                break;
+
+            case 3:
+                // Use foreign key name only
+                fkName = foreignKeyName;
+                break;
+
+            case 4:
+                // Use table name and foreign key name
+                fkName = tableName + "_" + foreignKeyName;
+                break;
+
+            case 5:
+                // Used in for loop 1 to 99 to append a number to the end
+                fkName = tableName;
+                break;
+
+            default:
+                // Give up
+                fkName = tableName;
+                break;
+        }
+
+        // Apply custom foreign key renaming rules. Can be useful in applying pluralization.
+        // For example:
+        /*if (tableName == "Employee" && foreignKey.FkColumn == "ReportsTo")
+            return "Manager";
+
+        if (tableName == "Territories" && foreignKey.FkTableName == "EmployeeTerritories")
+            return "Locations";
+
+        if (tableName == "Employee" && foreignKey.FkTableName == "Orders" && foreignKey.FkColumn == "EmployeeID")
+            return "ContactPerson";
+        */
+
+        // FK_TableName_FromThisToParentRelationshipName_FromParentToThisChildsRelationshipName
+        // (e.g. FK_CustomerAddress_Customer_Addresses will extract navigation properties "address.Customer" and "customer.Addresses")
+        // Feel free to use and change the following
+        /*if (foreignKey.ConstraintName.StartsWith("FK_") && foreignKey.ConstraintName.Count(x => x == '_') == 3)
+        {
+            var parts = foreignKey.ConstraintName.Split('_');
+            if (!string.IsNullOrWhiteSpace(parts[2]) && !string.IsNullOrWhiteSpace(parts[3]) && parts[1] == foreignKey.FkTableName)
+            {
+                if (relationship == Relationship.OneToMany)
+                    fkName = parts[3];
+                else if (relationship == Relationship.ManyToOne)
+                    fkName = parts[2];
+            }
+        }*/
+
+        return fkName;
+    };
+
+    ForeignKeyAnnotationsProcessing = (Table fkTable, Table pkTable, string propName) =>
+    {
+        /* Example:
+        // Each navigation property that is a reference to User are left intact
+        if (pkTable.NameHumanCase.Equals("User") && propName.Equals("User"))
+            return null;
+
+        // all the others are marked with this attribute
+        return new[] { "System.Runtime.Serialization.IgnoreDataMember" };
+        */
+
+        return null;
+    };
+
+    // Return true to include this table in the db context
+    ConfigurationFilter = (Table t) =>
+    {
+        return true;
+    };
+
+    // That's it, nothing else to configure ***********************************************************************************************
+
+
+    // Read schema
+    var factory = GetDbProviderFactory();
+    var tables = LoadTables(factory);
+    var storedProcs = LoadStoredProcs(factory);
+
+    // Generate output
+    if (tables.Count > 0 || storedProcs.Count > 0)
+    {
 #>
+<#@ include file="EF.Reverse.POCO.ttinclude" #>
+<#@ import namespace="System.Xml.Schema" #>
+<# } #>
