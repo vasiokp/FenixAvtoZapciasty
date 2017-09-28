@@ -51,12 +51,19 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="EntityFramework.SqlServerCompact, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.SqlServerCompact.6.1.3\lib\net45\EntityFramework.SqlServerCompact.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web.Entity" />
@@ -186,32 +193,10 @@
     <Compile Include="Controllers\DetailsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
-    <Compile Include="DataContext\AutoPartsModel.Context.cs">
+    <Compile Include="DataContext\DatabaseModel.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>AutoPartsModel.Context.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataContext\AutoPartsModel.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AutoPartsModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataContext\AutoPartsModel.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AutoPartsModel.edmx</DependentUpon>
-    </Compile>
-    <Compile Include="DataContext\CarModel.cs">
-      <DependentUpon>AutoPartsModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataContext\CarSubmodel.cs">
-      <DependentUpon>AutoPartsModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataContext\Category.cs">
-      <DependentUpon>AutoPartsModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataContext\Detail.cs">
-      <DependentUpon>AutoPartsModel.tt</DependentUpon>
+      <DependentUpon>DatabaseModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -223,23 +208,14 @@
     <Compile Include="Repositories\IRepository.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Data\AutoParts.mdf" />
-    <Content Include="App_Data\AutoParts_log.ldf">
-      <DependentUpon>AutoParts.mdf</DependentUpon>
-    </Content>
+    <Content Include="App_Data\SQL_Scripts\data.sql" />
+    <Content Include="App_Data\SQL_Scripts\schema.sql" />
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
-    <Content Include="DataContext\AutoPartsModel.Context.tt">
+    <Content Include="DataContext\DatabaseModel.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>AutoPartsModel.edmx</DependentUpon>
-      <LastGenOutput>AutoPartsModel.Context.cs</LastGenOutput>
-    </Content>
-    <Content Include="DataContext\AutoPartsModel.edmx.sql" />
-    <Content Include="DataContext\AutoPartsModel.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>AutoPartsModel.edmx</DependentUpon>
-      <LastGenOutput>AutoPartsModel.cs</LastGenOutput>
+      <LastGenOutput>DatabaseModel.cs</LastGenOutput>
     </Content>
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -268,17 +244,8 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EntityDeploy Include="DataContext\AutoPartsModel.edmx">
-      <Generator>EntityModelCodeGenerator</Generator>
-      <LastGenOutput>AutoPartsModel.Designer.cs</LastGenOutput>
-    </EntityDeploy>
-    <Content Include="DataContext\AutoPartsModel.edmx.diagram">
-      <DependentUpon>AutoPartsModel.edmx</DependentUpon>
-    </Content>
-    <None Include="Dockerfile" />
-    <None Include=".dockerignore">
-      <DependentUpon>Dockerfile</DependentUpon>
-    </None>
+    <Content Include="DataContext\EF.Reverse.POCO.Core.ttinclude" />
+    <Content Include="DataContext\EF.Reverse.POCO.ttinclude" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />

@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FenixAvtoZapciasty.Web", "F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FenixAvtoZapciasty.Data", "FenixAvtoZapciasty.Data\FenixAvtoZapciasty.Data.csproj", "{C0991827-C28F-4FCB-9202-214182E4D7BB}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4E3C1483-DFE8-400F-8D5A-E76D1AE583A4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{C0991827-C28F-4FCB-9202-214182E4D7BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0991827-C28F-4FCB-9202-214182E4D7BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0991827-C28F-4FCB-9202-214182E4D7BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E3C1483-DFE8-400F-8D5A-E76D1AE583A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E3C1483-DFE8-400F-8D5A-E76D1AE583A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E3C1483-DFE8-400F-8D5A-E76D1AE583A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E3C1483-DFE8-400F-8D5A-E76D1AE583A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

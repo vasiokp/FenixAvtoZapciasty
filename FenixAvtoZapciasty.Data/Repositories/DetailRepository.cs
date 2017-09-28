@@ -9,13 +9,13 @@ namespace FenixAvtoZapciasty.Data.Repositories
 	public class DetailRepository : IRepository<Detail>, IDisposable
 	{
 
-		private readonly AutoPartsModel _db = new AutoPartsModel();
+		private readonly AutoPartsContext _db = new AutoPartsContext();
 
 		public void Add(Detail obj)
 		{
 			if(obj != null)
 			{
-				_db.Detail.Add(obj);
+				_db.Details.Add(obj);
 				_db.SaveChanges();
 			}
 		}
@@ -24,10 +24,10 @@ namespace FenixAvtoZapciasty.Data.Repositories
 		{
 			if(id > 0)
 			{
-				var detail = _db.Detail.Where(d => d.Id == id).SingleOrDefault();
+				var detail = _db.Details.Where(d => d.Id == id).SingleOrDefault();
 				if (detail != null)
 				{
-					_db.Detail.Remove(detail);
+					_db.Details.Remove(detail);
 					_db.SaveChanges();
 				}
 			}
@@ -40,14 +40,14 @@ namespace FenixAvtoZapciasty.Data.Repositories
 
 		public IEnumerable<Detail> GetAll()
 		{
-			return _db.Detail.ToList();
+			return _db.Details.ToList();
 		}
 
 		public Detail GetById(int id)
 		{
 			if (id > 0)
 			{
-				var detail = from d in _db.Detail
+				var detail = from d in _db.Details
 							 where d.Id == id
 							 select d;
 				return detail.SingleOrDefault();
@@ -59,7 +59,7 @@ namespace FenixAvtoZapciasty.Data.Repositories
 		{
 			if (obj != null)
 			{
-				var detailToUpdate = _db.Detail.SingleOrDefault(d => d.Id == obj.Id);
+				var detailToUpdate = _db.Details.SingleOrDefault(d => d.Id == obj.Id);
 				if (detailToUpdate != null)
 				{
 					detailToUpdate.Name = obj.Name;

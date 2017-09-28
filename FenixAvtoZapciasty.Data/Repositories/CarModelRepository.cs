@@ -8,11 +8,11 @@ namespace FenixAvtoZapciasty.Data.Repositories
 {
 	public class CarModelRepository : IDisposable
 	{
-		private readonly AutoPartsModel _db = new AutoPartsModel();
+		private readonly AutoPartsContext _db = new AutoPartsContext();
 
 		public List<CarModel> GetCarModels()
 		{
-			return (from c in _db.CarModel select c).ToList();
+			return (from c in _db.CarModels select c).ToList();
 		}
 
 		public void Dispose()

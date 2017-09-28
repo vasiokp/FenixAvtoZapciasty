@@ -8,7 +8,7 @@ namespace FenixAvtoZapciasty.Data.Repositories
 {
 	public class CarSubmodelRepository : IRepository<CarSubmodel>, IDisposable
 	{
-		private readonly AutoPartsModel _db = new AutoPartsModel();
+		private readonly AutoPartsContext _db = new AutoPartsContext();
 		
 
 		public void Add(CarSubmodel obj)
@@ -28,7 +28,7 @@ namespace FenixAvtoZapciasty.Data.Repositories
 
 		public IEnumerable<CarSubmodel> GetAll()
 		{
-			return _db.CarSubmodel.ToList();
+			return _db.CarSubmodels.ToList();
 		}
 
 		public CarSubmodel GetById(int id)
