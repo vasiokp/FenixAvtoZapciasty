@@ -1,50 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Web.Http;
-using System.Web.Http.Description;
-using FenixAvtoZapciasty.Data.DataContext;
+﻿using FenixAvtoZapciasty.Data.DataContext;
 using FenixAvtoZapciasty.Data.Repositories;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Http;
 
 namespace FenixAvtoZapciasty.Data.Controllers
 {
-	[RoutePrefix("api/details")]
-	public class DetailsController : ApiController
+	[RoutePrefix("api/carmodels")]
+	public class CarModelsController : ApiController
 	{
-		public IEnumerable<Detail> Get()
+		public IEnumerable<CarModel> Get()
 		{
-			using(var details = new DetailRepository())
-			{
-				return details.GetAll();
+			using (var repo = new CarModelRepository()) {
+				return repo.GetAll();
 			}
 		}
 
-		public Detail Get(int id)
+		public CarModel Get(int id)
 		{
-			using(var detailt = new DetailRepository())
+			using (var model = new CarModelRepository())
 			{
-				return detailt.GetById(id);
+				return model.GetById(id);
 			}
 		}
 
 		[Route("Add")]
-		public RequestStatus Add(Detail detail)
+		public RequestStatus Add(CarModel model)
 		{
 			RequestStatus request = new RequestStatus();
-			if (detail == null) {
+			if (model == null)
+			{
 				request.IsSucces = false;
 				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
 			}
 			else
-				using (var repo = new DetailRepository())
+				using (var repo = new CarModelRepository())
 				{
-					repo.Add(detail);
-					if (detail.Id > 0)
+					repo.Add(model);
+					if (model.Id > 0)
 					{
 						request.IsSucces = true;
 						request.Message = Validation.GetMessage(ValidationStatus.ADDED);
@@ -55,18 +50,19 @@ namespace FenixAvtoZapciasty.Data.Controllers
 		}
 
 		[Route("Update")]
-		public RequestStatus Update(Detail detail)
+		public RequestStatus Update(CarModel model)
 		{
 			RequestStatus request = new RequestStatus();
-			if (detail == null) {
+			if (model == null)
+			{
 				request.IsSucces = false;
 				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
 			}
 			else
-				using (var repo = new DetailRepository())
+				using (var repo = new CarModelRepository())
 				{
-					repo.Update(detail);
-					if (detail.Id > 0)
+					repo.Update(model);
+					if (model.Id > 0)
 					{
 						request.IsSucces = true;
 						request.Message = Validation.GetMessage(ValidationStatus.OK);
@@ -81,7 +77,7 @@ namespace FenixAvtoZapciasty.Data.Controllers
 		public RequestStatus Delete(int id)
 		{
 			RequestStatus request = new RequestStatus();
-			using (var repo = new DetailRepository())
+			using (var repo = new CarModelRepository())
 			{
 				repo.Delete(id);
 				request.IsSucces = true;

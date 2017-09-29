@@ -21,17 +21,7 @@ namespace FenixAvtoZapciasty.Data.Controllers
 		}
 
 		// GET api/values/5
-		public List<CarModel> Get(int id)
-		{
-			using (var carRepository = new CarModelRepository())
-			{
-				var models = carRepository.GetCarModels();
-				var result = new JsonResult();
-				result.Data = models;
-				result.JsonRequestBehavior = JsonRequestBehavior.AllowGet;
-				return models;
-			}
-		}
+
 		[System.Web.Http.Route("GetSubModels")]
 		public IEnumerable<CarSubmodel> GetSubModels()
 		{
