@@ -16,7 +16,6 @@ namespace FenixAvtoZapciasty.Data.Controllers
 	[System.Web.Http.RoutePrefix("api/details")]
 	public class DetailsController : ApiController
 	{
-		//[System.Web.Http.Route("GetSubModels")]
 		public IEnumerable<Detail> Get()
 		{
 			using(var details = new DetailRepository())
@@ -25,5 +24,70 @@ namespace FenixAvtoZapciasty.Data.Controllers
 			}
 		}
 
+		public Detail Get(int id)
+		{
+			using(var detailt = new DetailRepository())
+			{
+				return detailt.GetById(id);
+			}
+		}
+
+		[Route("Add")]
+		public RequestStatus Add(Detail detail)
+		{
+			RequestStatus request = new RequestStatus();
+			if (detail == null) {
+				request.IsSucces = false;
+				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
+			}
+			else
+				using (var repo = new DetailRepository())
+				{
+					repo.Add(detail);
+					if (detail.Id > 0)
+					{
+						request.IsSucces = true;
+						request.Message = Validation.GetMessage(ValidationStatus.ADDED);
+					}
+				}
+
+			return request;
+		}
+
+		[Route("Update")]
+		public RequestStatus Update(Detail detail)
+		{
+			RequestStatus request = new RequestStatus();
+			if (detail == null) {
+				request.IsSucces = false;
+				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
+			}
+			else
+				using (var repo = new DetailRepository())
+				{
+					repo.Update(detail);
+					if (detail.Id > 0)
+					{
+						request.IsSucces = true;
+						request.Message = Validation.GetMessage(ValidationStatus.OK);
+					}
+				}
+
+			return request;
+		}
+
+		[Route("Delete/{id}")]
+		[HttpPost]
+		public RequestStatus Delete(int id)
+		{
+			RequestStatus request = new RequestStatus();
+			using (var repo = new DetailRepository())
+			{
+				repo.Delete(id);
+				request.IsSucces = true;
+				request.Message = Validation.GetMessage(ValidationStatus.OK);
+			}
+			return request;
+		}
 	}
 }
