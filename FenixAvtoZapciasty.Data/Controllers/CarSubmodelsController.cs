@@ -16,7 +16,7 @@ namespace FenixAvtoZapciasty.Data.Controllers
 			}
 		}
 
-		public CarModel Get(int id)
+		public CarSubmodel Get(int id)
 		{
 			using (var model = new CarSubmodelRepository())
 			{
