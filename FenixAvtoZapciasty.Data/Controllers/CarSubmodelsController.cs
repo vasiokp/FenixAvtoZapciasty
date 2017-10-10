@@ -5,35 +5,36 @@ using System.Web.Http;
 
 namespace FenixAvtoZapciasty.Data.Controllers
 {
-	[RoutePrefix("api/carmodels")]
-	public class CarModelsController : ApiController
+	[RoutePrefix("api/carsubmodels")]
+	public class CarSubmodelsController : ApiController
 	{
-		public IEnumerable<CarModel> Get()
+		public IEnumerable<CarSubmodel> Get()
 		{
-			using (var repo = new CarModelRepository()) {
+			using (var repo = new CarSubmodelRepository())
+			{
 				return repo.GetAll();
 			}
 		}
 
 		public CarModel Get(int id)
 		{
-			using (var model = new CarModelRepository())
+			using (var model = new CarSubmodelRepository())
 			{
 				return model.GetById(id);
 			}
 		}
 
 		[Route("Add")]
-		public RequestStatus<CarModel> Add(CarModel model)
+		public RequestStatus<CarSubmodel> Add(CarSubmodel model)
 		{
-			RequestStatus<CarModel> request = new RequestStatus<CarModel>();
+			RequestStatus<CarSubmodel> request = new RequestStatus<CarSubmodel>();
 			if (model == null)
 			{
 				request.IsSucces = false;
 				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
 			}
 			else
-				using (var repo = new CarModelRepository())
+				using (var repo = new CarSubmodelRepository())
 				{
 					repo.Add(model);
 					if (model.Id > 0)
@@ -48,16 +49,16 @@ namespace FenixAvtoZapciasty.Data.Controllers
 		}
 
 		[Route("Update")]
-		public RequestStatus<CarModel> Update(CarModel model)
+		public RequestStatus<CarSubmodel> Update(CarSubmodel model)
 		{
-			RequestStatus<CarModel> request = new RequestStatus<CarModel>();
+			RequestStatus<CarSubmodel> request = new RequestStatus<CarSubmodel>();
 			if (model == null)
 			{
 				request.IsSucces = false;
 				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
 			}
 			else
-				using (var repo = new CarModelRepository())
+				using (var repo = new CarSubmodelRepository())
 				{
 					repo.Update(model);
 					if (model.Id > 0)
@@ -72,10 +73,10 @@ namespace FenixAvtoZapciasty.Data.Controllers
 
 		[Route("Delete/{id}")]
 		[HttpPost]
-		public RequestStatus<CarModel> Delete(int id)
+		public RequestStatus<CarSubmodel> Delete(int id)
 		{
-			RequestStatus<CarModel> request = new RequestStatus<CarModel>();
-			using (var repo = new CarModelRepository())
+			RequestStatus<CarSubmodel> request = new RequestStatus<CarSubmodel>();
+			using (var repo = new CarSubmodelRepository())
 			{
 				repo.Delete(id);
 				request.IsSucces = true;

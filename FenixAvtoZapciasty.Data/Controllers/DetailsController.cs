@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
+﻿using System.Collections.Generic;
 using System.Web.Http;
-using System.Web.Http.Description;
 using FenixAvtoZapciasty.Data.DataContext;
 using FenixAvtoZapciasty.Data.Repositories;
 
@@ -33,9 +25,9 @@ namespace FenixAvtoZapciasty.Data.Controllers
 		}
 
 		[Route("Add")]
-		public RequestStatus Add(Detail detail)
+		public RequestStatus<Detail> Add(Detail detail)
 		{
-			RequestStatus request = new RequestStatus();
+			RequestStatus<Detail> request = new RequestStatus<Detail>();
 			if (detail == null) {
 				request.IsSucces = false;
 				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
@@ -55,9 +47,9 @@ namespace FenixAvtoZapciasty.Data.Controllers
 		}
 
 		[Route("Update")]
-		public RequestStatus Update(Detail detail)
+		public RequestStatus<Detail> Update(Detail detail)
 		{
-			RequestStatus request = new RequestStatus();
+			RequestStatus<Detail> request = new RequestStatus<Detail>();
 			if (detail == null) {
 				request.IsSucces = false;
 				request.Message = Validation.GetMessage(ValidationStatus.NULL_ERROR);
@@ -78,9 +70,9 @@ namespace FenixAvtoZapciasty.Data.Controllers
 
 		[Route("Delete/{id}")]
 		[HttpPost]
-		public RequestStatus Delete(int id)
+		public RequestStatus<Detail> Delete(int id)
 		{
-			RequestStatus request = new RequestStatus();
+			RequestStatus<Detail> request = new RequestStatus<Detail>();
 			using (var repo = new DetailRepository())
 			{
 				repo.Delete(id);

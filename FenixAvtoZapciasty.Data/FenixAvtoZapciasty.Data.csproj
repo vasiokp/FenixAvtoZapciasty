@@ -193,7 +193,7 @@
     <Compile Include="Controllers\CarModelsController.cs" />
     <Compile Include="Controllers\DetailsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\ValuesController.cs" />
+    <Compile Include="Controllers\CarSubmodelsController.cs" />
     <Compile Include="DataContext\DatabaseModel.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
